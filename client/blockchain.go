@@ -8,9 +8,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
+
+func isTestMode() bool {
+	return os.Getenv("IS_TEST") == "1"
+}
 
 // Calcula o hash de um bloco
 func calculateHash(block Block) string {
@@ -62,6 +67,40 @@ func isBlockValid(newBlock, oldBlock Block) bool {
 }
 
 func addNewBlock(tipo string, conteudo string) {
+	if isTestMode() {
+		// 1) pega índice e prevHash sob lock
+		blockchainMutex.Lock()
+		idx := len(blockchain.Blocos)
+		var prevHash string
+		if idx > 0 {
+			prevHash = blockchain.Blocos[idx-1].Hash
+		}
+		blockchainMutex.Unlock()
+
+		// 2) monta o bloco (fora de qualquer lock)
+		newBlock := Block{
+			Index:     idx,
+			Timestamp: "TESTE",
+			Type:      tipo,
+			Data:      conteudo,
+			PrevHash:  prevHash,
+		}
+		newBlock.Hash = calculateHash(newBlock)
+
+		// 3) só a região de append fica sob lock
+		blockchainMutex.Lock()
+		blockchain.Blocos = append(blockchain.Blocos, newBlock)
+		blockchainMutex.Unlock()
+
+		// 4) salva sem deadlock (SaveJSON faz seu próprio lock)
+		if err := SaveJSONBlockchain(); err != nil {
+			fmt.Printf("Erro ao salvar blockchain de teste: %v\n", err)
+		}
+		return
+	}
+	blockchainMutex.Lock()
+	defer blockchainMutex.Unlock()
+
 	println("\nVerificando os outros clientes conectados para sicronizar...")
 	vazio := false
 	if len(blockchain.Blocos) == 0 {
@@ -95,6 +134,11 @@ func addNewBlock(tipo string, conteudo string) {
 
 // Função para sincronizar blockchain com os nós existentes
 func syncBlockchain(porta string) {
+	if isTestMode() {
+		fmt.Println("[TESTE] Ignorando syncBlockchain em ambiente de teste")
+		return
+	}
+
 	println("Sicronizando blockchain entre os nós...")
 	var longestChain []Block
 	serverLocal := fmt.Sprintf("http://%s:%s", ipLocal, porta)
@@ -154,6 +198,11 @@ func isChainValid(chain []Block) bool {
 
 // adicionar novo bloco enviando para todos os nós
 func broadcastNewBlock(block Block) {
+	if isTestMode() {
+		fmt.Println("[TESTE] Ignorando broadcastNewBlock em ambiente de teste")
+		return
+	}
+
 	serverLocal := fmt.Sprintf("http://%s:%s", ipLocal, portaLocal)
 
 	for _, server := range servidores {

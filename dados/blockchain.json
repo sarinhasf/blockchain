@@ -71,6 +71,30 @@
       "Data": "[placa: ESV7760, ponto: Ponto Caju, valor: 48.42]",
       "PrevHash": "3645aff2443d2c9c794ad4277462c4b4a62f86d7227e3f77c7f3bb57d6d42fb3",
       "Hash": "b015659f6f679c0e8756e13275e1afd11e7a41dceecafa724f12b4faf86373a4"
+    },
+    {
+      "Index": 9,
+      "Timestamp": "2025-06-09 17:09:26.840660882 +0000 UTC m=+26.688557016",
+      "Type": "reserva",
+      "Data": "[placa: GFJ0943, ponto: Ponto SSA]",
+      "PrevHash": "b015659f6f679c0e8756e13275e1afd11e7a41dceecafa724f12b4faf86373a4",
+      "Hash": "7aa336a2f71979ccb26bda3260bd823517cd1af9fabd7a4286ca0efaf4f40aea"
+    },
+    {
+      "Index": 10,
+      "Timestamp": "2025-06-09 17:09:40.862602625 +0000 UTC m=+40.710498759",
+      "Type": "recarga",
+      "Data": "[placa: GFJ0943, ponto: Ponto SSA]",
+      "PrevHash": "7aa336a2f71979ccb26bda3260bd823517cd1af9fabd7a4286ca0efaf4f40aea",
+      "Hash": "77d18bf9c5907beafcf85e8083fdd85d99fff7eccde6b03f93c5783551cec590"
+    },
+    {
+      "Index": 11,
+      "Timestamp": "2025-06-09 17:09:44.872774587 +0000 UTC m=+44.720670721",
+      "Type": "pagamento",
+      "Data": "[placa: GFJ0943, ponto: Ponto SSA, valor: 378.21]",
+      "PrevHash": "77d18bf9c5907beafcf85e8083fdd85d99fff7eccde6b03f93c5783551cec590",
+      "Hash": "e557878578803456ccadbb99ea8ef7da053e71c824ea12d7b7e0557a8fbdea37"
     }
   ]
 }

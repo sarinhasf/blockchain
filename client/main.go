@@ -5,6 +5,10 @@ import (
 )
 
 func main() {
+	StartNode()
+}
+
+func StartNode() {
 	ReadBlocks()
 	porta := os.Getenv("PORT") //Pega a porta do docker-compose
 	startingREST(porta)

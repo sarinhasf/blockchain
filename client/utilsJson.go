@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 /*
@@ -44,6 +45,18 @@ Váriaveis Globais.
 */
 var dataPoints PointsWrapper
 var blockchain Blockchain
+var blockchainMutex sync.Mutex
+
+/*
+Retorna o caminho do arquivo blockchain.json.
+Usa variável de ambiente BLOCKCHAIN_PATH, ou o padrão Docker (/app/blockchain.json).
+*/
+func getBlockchainPath() string {
+	if path := os.Getenv("BLOCKCHAIN_PATH"); path != "" {
+		return path
+	}
+	return "/app/blockchain.json"
+}
 
 /*
 ReadJSONFile: lê qualquer arquivo JSON da pasta dados e deserializa para a struct fornecida.
@@ -89,7 +102,11 @@ func ReadPoints() {
 ReadBlocks: lê todos pontos do arquivo blockchain da pasta dados.
 */
 func ReadBlocks() {
-	err := ReadJSONFile("/app/blockchain.json", &blockchain)
+	blockchainMutex.Lock()
+	defer blockchainMutex.Unlock()
+
+	path := getBlockchainPath()
+	err := ReadJSONFile(path, &blockchain)
 	if err != nil {
 		fmt.Println("Erro:", err)
 	} else {
@@ -101,13 +118,25 @@ func ReadBlocks() {
 SaveBlockchain: salva os dados do blockchain no json novamente.
 */
 func SaveJSONBlockchain() error {
-	fullPath := filepath.Join("/app/", "blockchain.json")
+	blockchainMutex.Lock()
+	defer blockchainMutex.Unlock()
+
+	fullPath := getBlockchainPath()
+	// Evita criação de diretórios desnecessários em testes
+	if !isTestMode() {
+		err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("erro ao criar diretório: %w", err)
+		}
+	}
+
+	//fullPath := filepath.Join("/app/", "blockchain.json")
 
 	// Garantir que a pasta "dados" exista
-	err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
+	/*err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("erro ao criar diretório dados: %w", err)
-	}
+	}*/
 
 	// Serializar a variável blockchain para JSON
 	bytes, err := json.MarshalIndent(blockchain, "", "  ")
