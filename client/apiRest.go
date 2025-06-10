@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 )
 
 // AQUI SETAMOS OS SERVIDORES DE TODAS MAQUINAS
 var servidores []string = []string{
-	"http://172.26.32.1:8091",
-	"http://172.26.32.1:8092",
-	"http://172.26.32.1:8093",
+	"http://client1:8091",
+	"http://client2:8092",
+	"http://client3:8093",
 }
 
 // O endereço setado como 0.0.0.0 serve para escutar conexões de qualquer
@@ -20,7 +21,7 @@ var servidores []string = []string{
 var enderecoUniversal = "0.0.0.0:"
 
 // IP da maquina local (PRECISA SER MODIFICADO!!)
-var ipLocal = "172.26.32.1"
+var ipLocal = os.Getenv("HOSTNAME")
 
 // Porta da maquina
 var portaLocal string
@@ -58,7 +59,7 @@ func isPeerAlive(peer string) bool {
 		Timeout: 2 * time.Second,
 	}
 
-	resp, err := client.Get(peer)
+	resp, err := client.Get(peer + "/status")
 	if err != nil {
 		return false // Não respondeu = provavelmente offline
 	}

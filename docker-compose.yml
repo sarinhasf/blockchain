@@ -7,8 +7,8 @@ services:
     environment:
       - PORT=8091
     volumes:
-      - ./dados/blockchain.json:/app/blockchain.json
-      - ./dados/points.json:/app/points.json
+      - ./dados/client1/blockchain.json:/app/blockchain.json
+      - ./dados/client1/points.json:/app/points.json
 
   client2:
     build: ./client
@@ -18,8 +18,8 @@ services:
     environment:
       - PORT=8092
     volumes:
-      - ./dados/blockchain.json:/app/blockchain.json
-      - ./dados/points.json:/app/points.json
+      - ./dados/client2/blockchain.json:/app/blockchain.json
+      - ./dados/client2/points.json:/app/points.json
 
   client3:
     build: ./client
@@ -29,5 +29,5 @@ services:
     environment:
       - PORT=8093
     volumes:
-      - ./dados/blockchain.json:/app/blockchain.json
-      - ./dados/points.json:/app/points.json
+      - ./dados/client3/blockchain.json:/app/blockchain.json
+      - ./dados/client3/points.json:/app/points.json

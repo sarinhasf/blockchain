@@ -62,35 +62,36 @@ func isBlockValid(newBlock, oldBlock Block) bool {
 }
 
 func addNewBlock(tipo string, conteudo string) {
-	println("\nVerificando os outros clientes conectados para sicronizar...")
+	println("\nSincronizando com a rede antes de criar um novo bloco...")
+	syncBlockchain(portaLocal) // Usa a variável global portaLocal
+	println("Sincronização concluída. Prosseguindo com a criação do bloco.")
+
 	vazio := false
 	if len(blockchain.Blocos) == 0 {
 		vazio = true
 	}
 
 	if vazio {
-		//fmt.Println("O arquivo blockchain.json está vazio.")
 		// Cria o bloco gênesis (o primeiro block)
 		genesisBlock := createGenesisBlock(tipo, conteudo)
 		blockchain.Blocos = append(blockchain.Blocos, genesisBlock)
-		broadcastNewBlock(genesisBlock) //salva o bloco nos outros nós
+		SaveJSONBlockchain()            // Salva localmente primeiro//////////
+		broadcastNewBlock(genesisBlock) // Depois, transmite para os outros nós
 
 	} else {
-		//fmt.Println("O arquivo blockchain.json contém dados.")
-		// Já existe blocos, vamos add mais
-		newBlock := generateBlock(blockchain.Blocos[len(blockchain.Blocos)-1], conteudo, tipo)
-		if isBlockValid(newBlock, blockchain.Blocos[len(blockchain.Blocos)-1]) {
-			blockchain.Blocos = append(blockchain.Blocos, newBlock) //verifica se esse bloco é válido comparado com o anterior
-		}
-		broadcastNewBlock(newBlock) //salva o bloco nos outros nós
-	}
+		// Já existem blocos, vamos adicionar mais um na ponta da cadeia correta
+		lastBlock := blockchain.Blocos[len(blockchain.Blocos)-1]
+		newBlock := generateBlock(lastBlock, conteudo, tipo)
 
-	//fmt.Println("Printando arquivo BLOCKCHAIN:")
-	//for _, block := range blockchain.Blocos {
-	//fmt.Printf("Index: %d\nTimestamp: %s\nData: %s\nHash: %s\nPrevHash: %s\n\n",
-	//block.Index, block.Timestamp, block.Data, block.Hash, block.PrevHash)
-	//}
-	SaveJSONBlockchain() //salvando dados no json local
+		if isBlockValid(newBlock, lastBlock) {
+			blockchain.Blocos = append(blockchain.Blocos, newBlock)
+			SaveJSONBlockchain()        // Salva localmente primeiro
+			broadcastNewBlock(newBlock) // Depois, transmite para os outros nós
+		} else {
+			// Isso não deveria acontecer com a sincronização prévia, mas é uma boa proteção
+			fmt.Println("[Erro] Bloco gerado localmente é inválido após a sincronização. Abortando.")
+		}
+	}
 }
 
 // Função para sincronizar blockchain com os nós existentes

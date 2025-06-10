@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 )
 
 func main() {
@@ -10,12 +11,14 @@ func main() {
 	startingREST(porta)
 
 	//cria-se uma goroutine para sicronizar sempre as blockchains a cada 5 segundos
-	//go func() {
-	syncBlockchain(porta)
-	//time.Sleep(5 * time.Second)
-	//}()
+	go func() {
+		for {
+			time.Sleep(10 * time.Second)
+			println("\nSincronizando blockchain com outros clientes...")
+			syncBlockchain(porta)
+		}
+	}()
 
-	//time.Sleep(3 * time.Second)
 	BuildingMenu()
 	select {} // manter o programa rodando
 }
