@@ -10,9 +10,9 @@ import (
 
 // AQUI SETAMOS OS SERVIDORES DE TODAS MAQUINAS
 var servidores []string = []string{
-	"http://172.22.208.1:8091",
-	"http://172.22.208.1:8093",
-	"http://172.22.208.1:8092",
+	"http://172.26.32.1:8091",
+	"http://172.26.32.1:8092",
+	"http://172.26.32.1:8093",
 }
 
 // O endereço setado como 0.0.0.0 serve para escutar conexões de qualquer
@@ -20,7 +20,7 @@ var servidores []string = []string{
 var enderecoUniversal = "0.0.0.0:"
 
 // IP da maquina local (PRECISA SER MODIFICADO!!)
-var ipLocal = "172.22.208.1"
+var ipLocal = "172.26.32.1"
 
 // Porta da maquina
 var portaLocal string
@@ -45,7 +45,6 @@ func startingREST(porta string) {
 func createEndpoints() {
 	http.HandleFunc("/blockchain", getBlockchain) //get
 	http.HandleFunc("/add-block", postBlock)      //post
-	http.HandleFunc("/add-data", postData)        // <- novo endpoint
 	http.HandleFunc("/status", getStatus)         //get
 }
 
@@ -55,12 +54,8 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func isPeerAlive(peer string) bool {
-	if isTestMode() {
-		return false // evita qualquer tentativa de rede em teste
-	}
-
 	client := http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: 2 * time.Second,
 	}
 
 	resp, err := client.Get(peer)
@@ -91,20 +86,4 @@ func postBlock(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Bloco inválido ou fora de ordem", http.StatusBadRequest)
 	}
-}
-
-func postData(w http.ResponseWriter, r *http.Request) {
-	type Payload struct {
-		Type string `json:"type"`
-		Data string `json:"data"`
-	}
-
-	var payload Payload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "Payload inválido", http.StatusBadRequest)
-		return
-	}
-
-	addNewBlock(payload.Type, payload.Data)
-	fmt.Fprintln(w, "Bloco adicionado com sucesso.")
 }
