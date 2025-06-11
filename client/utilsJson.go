@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 )
 
 /*
@@ -25,25 +24,25 @@ type PointsWrapper struct {
 	PontosDeRecarga []Point `json:"pontos_de_recarga"`
 }
 
-// Estrutura de um bloco
-type Block struct {
-	Index     int
-	Timestamp string //marcacao de tempo
-	Type      string //tipo do conteudo armazenado
-	Data      string //conteudo
-	PrevHash  string //hash do bloco anterior
-	Hash      string //hash do bloco
+type Empresa struct {
+	ID     int    `json:"id"`
+	Nome   string `json:"nome"`
+	Pontos []int  `json:"pontos"`
 }
 
-type Blockchain struct {
-	Blocos []Block `json:"blocos"`
+type Companies struct {
+	Empresas []Empresa `json:"empresas"`
+}
+
+type Message struct {
+	Content string `json:"content"`
 }
 
 /*
 Váriaveis Globais.
 */
 var dataPoints PointsWrapper
-var blockchain Blockchain
+var dataCompanies Companies
 
 /*
 ReadJSONFile: lê qualquer arquivo JSON da pasta dados e deserializa para a struct fornecida.
@@ -80,47 +79,18 @@ func ReadPoints() {
 	if err != nil {
 		fmt.Println("Erro:", err)
 	} else {
-
 		//fmt.Printf("Pontos lidos do arquivo points com sucesso!\n")
 	}
 }
 
 /*
-ReadBlocks: lê todos pontos do arquivo blockchain da pasta dados.
+ReadCompanies: lê todos as empresas do arquivo companies da pasta dados.
 */
-func ReadBlocks() {
-	err := ReadJSONFile("/app/blockchain.json", &blockchain)
+func ReadCompanies() {
+	err := ReadJSONFile("companies.json", &dataCompanies)
 	if err != nil {
 		fmt.Println("Erro:", err)
 	} else {
-		//fmt.Printf("Pontos lidos do arquivo blockchain com sucesso!\n")
+		//fmt.Printf("Pontos lidos do arquivo points com sucesso!\n")
 	}
-}
-
-/*
-SaveBlockchain: salva os dados do blockchain no json novamente.
-*/
-func SaveJSONBlockchain() error {
-	fullPath := filepath.Join("/app/", "blockchain.json")
-
-	// Garantir que a pasta "dados" exista
-	err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("erro ao criar diretório dados: %w", err)
-	}
-
-	// Serializar a variável blockchain para JSON
-	bytes, err := json.MarshalIndent(blockchain, "", "  ")
-	if err != nil {
-		return fmt.Errorf("erro ao codificar blockchain para JSON: %w", err)
-	}
-
-	// Salvar no arquivo
-	err = ioutil.WriteFile(fullPath, bytes, 0644)
-	if err != nil {
-		return fmt.Errorf("erro ao salvar arquivo blockchain.json: %w", err)
-	}
-
-	fmt.Println("\nDados da Blockchain salva com sucesso!")
-	return nil
 }

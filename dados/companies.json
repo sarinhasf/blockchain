@@ -1,0 +1,19 @@
+{
+  "empresas": [
+    {
+      "id": 1,
+      "nome": "Empresa A",
+      "pontos": [1, 2, 3]
+    },
+     {
+      "id": 2,
+      "nome": "Empresa B",
+      "pontos": [4, 5, 6]
+    },
+     {
+      "id": 3,
+      "nome": "Empresa C",
+      "pontos": [7, 8, 9]
+    }
+  ]
+}

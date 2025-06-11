@@ -1,33 +1,37 @@
 services:
-  client1:
-    build: ./client
-    container_name: client1
+  server1:
+    build: ./server
+    container_name: server1
     ports:
       - "8091:8091"
     environment:
       - PORT=8091
     volumes:
-      - ./dados/client1/blockchain.json:/app/blockchain.json
-      - ./dados/client1/points.json:/app/points.json
+      - ./dados/server1/blockchain.json:/app/blockchain.json
 
-  client2:
-    build: ./client
-    container_name: client2
+  server2:
+    build: ./server
+    container_name: server2
     ports:
       - "8092:8092"
     environment:
       - PORT=8092
     volumes:
-      - ./dados/client2/blockchain.json:/app/blockchain.json
-      - ./dados/client2/points.json:/app/points.json
+      - ./dados/server2/blockchain.json:/app/blockchain.json
 
-  client3:
-    build: ./client
-    container_name: client3
+  server3:
+    build: ./server
+    container_name: server3
     ports:
       - "8093:8093"
     environment:
       - PORT=8093
     volumes:
-      - ./dados/client3/blockchain.json:/app/blockchain.json
-      - ./dados/client3/points.json:/app/points.json
+      - ./dados/server3/blockchain.json:/app/blockchain.json
+    
+  client:
+    build: ./client
+    container_name: client
+    volumes:
+      - ./dados/companies.json:/app/companies.json
+      - ./dados/points.json:/app/points.json

@@ -2,13 +2,23 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// AQUI SETAMOS OS SERVIDORES DE TODAS MAQUINAS
+var servidores []string = []string{
+	"http://server1:8091",
+	"http://server2:8092",
+	"http://server3:8093",
+}
 
 func BuildingTitle() {
 	fmt.Println("      ____             ____________________      ")
@@ -42,6 +52,57 @@ func GeneratingPlate() string {
 	return string(placa)
 }
 
+func VerifyCompany(choose int) int {
+	empresas := dataCompanies.Empresas
+	//verificando qual empresa mandar de acordo com o ponto escolhido
+	//fmt.Println("Entrando no for de verifyCompany...")
+	//fmt.Printf("Escolha: %d\n", choose)
+	for _, empresa := range empresas {
+		for _, p := range empresa.Pontos {
+			//fmt.Printf("Empresa %s, Ponto %d\n", empresa.Nome, p)
+			if p == choose {
+				//fmt.Printf("O id da empresa é %d\n", empresa.ID)
+				return empresa.ID
+			}
+		}
+	}
+	return 0
+}
+
+func getUrlById(id int) string {
+	var url string
+	switch id {
+	case 1:
+		url = servidores[0]
+	case 2:
+		url = servidores[1]
+	case 3:
+		url = servidores[2]
+
+	}
+	return url
+}
+
+func sendMessageForServer(mensagem string, url string) {
+	fmt.Printf("Mensagem enviada ao servidor %s: %s\n", url, mensagem)
+	msg := Message{Content: mensagem}
+	urlSend := url + "/mensagem"
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		fmt.Println("Erro ao converter mensagem:", err)
+		return
+	}
+
+	resp, err := http.Post(urlSend, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		fmt.Println("Erro ao enviar requisição:", err)
+		return
+	}
+	defer resp.Body.Close()
+	fmt.Println("Resposta do servidor: ", resp.Status)
+}
+
 /*
 BuildingMenu: construindo Menu para exibir para os clientes.
 */
@@ -51,7 +112,10 @@ func BuildingMenu() {
 	fmt.Printf("Cliente com a placa [%s] entrou no sistema!\n\n", placa)
 
 	BuildingTitle()
+
+	//lendo dados dos arquivos
 	ReadPoints()
+	ReadCompanies()
 
 	pontos := dataPoints.PontosDeRecarga
 
@@ -76,9 +140,22 @@ func BuildingMenu() {
 	numChoose := ConvertToNum(opcao)
 	posicao := numChoose - 1
 	fmt.Println("\nVocê escolheu o ponto:", pontos[posicao].Nome)
-	conteudo := "[placa: " + placa + ", ponto: " + pontos[posicao].Nome + "]"
-	addNewBlock("reserva", conteudo)
-	CarChargingSimulator(placa, pontos[posicao])
+
+	//Estrutura da mensagem: tipo de processo (reserva, pagamento...), placa, nome do ponto
+	mensagem := "reserva," + placa + "," + pontos[posicao].Nome
+
+	idEmpresa := VerifyCompany(numChoose)
+	var url string
+	if idEmpresa == 1 || idEmpresa == 2 || idEmpresa == 3 { //verificando se o id retornado é 1, 2 ou 3
+		url = getUrlById(idEmpresa)
+		sendMessageForServer(mensagem, url)
+	} else {
+		fmt.Println("Id da empresa não encontrado!")
+		return
+	}
+
+	//simula carro carregando e pagando
+	CarChargingSimulator(placa, pontos[posicao], url)
 }
 
 /*
@@ -93,23 +170,21 @@ func ValueRandom() string {
 /*
 CarChargingSimulator: função para simular carro indo até o ponto e carregando, e após isso pagando.
 */
-func CarChargingSimulator(placa string, ponto Point) {
+func CarChargingSimulator(placa string, ponto Point, url string) {
+
 	//simulando carregamento
 	fmt.Printf("\nCarro [%s] se deslocando até o %s...", placa, ponto.Nome)
 	time.Sleep(5 * time.Second)
 	fmt.Printf("\nCarro [%s] chegando ao %s...", placa, ponto.Nome)
 	time.Sleep(5 * time.Second)
 	fmt.Printf("\nCarro [%s] carregando no %s...\n", placa, ponto.Nome)
-	conteudoRecarga := "[placa: " + placa + ", ponto: " + ponto.Nome + "]"
-	addNewBlock("recarga", conteudoRecarga) //criando novo bloco
+	mensagemRecarga := "recarga," + placa + "," + ponto.Nome
+	sendMessageForServer(mensagemRecarga, url)
 
 	//simulando pagamento
 	valorRecarga := ValueRandom() //gerando valor aleatório de pagamento
 	fmt.Printf("\nRecarga do carro [%s] no %s finalizada! O valor total foi: R$ %s.", placa, ponto.Nome, valorRecarga)
 	fmt.Printf("\nCarro [%s] efetuando pagamento...\n", placa)
-	conteudoPagamento := "[placa: " + placa + ", ponto: " + ponto.Nome + ", valor: " + valorRecarga + "]"
-	addNewBlock("pagamento", conteudoPagamento) //criando novo bloco
-
-	//serverLocal := fmt.Sprintf("http://%s:%s", ipLocal, portaLocal)
-	//getBlockchainFrom(serverLocal)
+	mensagemPagamento := "pagamento," + placa + "," + ponto.Nome
+	sendMessageForServer(mensagemPagamento, url)
 }

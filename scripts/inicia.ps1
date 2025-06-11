@@ -4,6 +4,9 @@ docker-compose create
 # Mostrar todos os containers
 docker ps -a
 
+# Iniciando servidores
+docker-compose start server1 server2 server3
+
 # Inicia cliente
 #docker-compose start client
 #docker exec -it client sh
