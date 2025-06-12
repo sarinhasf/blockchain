@@ -107,12 +107,11 @@ func syncBlockchain(porta string) {
 		}
 
 		//verificar se o nó está on ou of
-		if isPeerAlive(server) {
-			fmt.Println(server, " está online.")
-		} else {
+		if !isPeerAlive(server) {
 			fmt.Println(server, " está offline.")
 			continue
 		}
+		fmt.Println(server, " está online. Buscando blockchain...")
 
 		//pega todo arquivo blockchain do nó
 		resp, err := http.Get(server + "/blockchain")
@@ -122,7 +121,12 @@ func syncBlockchain(porta string) {
 		}
 		defer resp.Body.Close()
 
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("[Sync] Erro ao ler resposta de %s: %v\n", server, err)
+			continue
+		}
+
 		var remoteChain []Block
 		if err := json.Unmarshal(body, &remoteChain); err != nil {
 			fmt.Printf("[Sync] Erro ao decodificar blockchain de %s\n", server)
@@ -135,18 +139,28 @@ func syncBlockchain(porta string) {
 		}
 	}
 
-	// Se encontrou uma cadeia mais longa válida, substituir a atual
-	if len(longestChain) > len(blockchain.Blocos) {
-		fmt.Println("[Sync] Substituindo blockchain local pela maior válida recebida")
+	localChainIsValid := isChainValid(blockchain.Blocos)
+	networkChainIsValid := len(longestChain) > 0 // Verifica se a cadeia recebida é válida
+
+	// Condição para substituir a blockchain local:
+	// 1. A cadeia da rede é válida E é maior que a nossa. (Consenso normal)
+	// OU
+	// 2. A nossa cadeia local é INVÁLIDA e encontramos uma cadeia válida na rede. (Autocorreção)
+	if (networkChainIsValid && len(longestChain) > len(blockchain.Blocos)) || (!localChainIsValid && networkChainIsValid) {
+		fmt.Println("[Sync] Blockchain local desatualizada ou inválida. Substituindo pela versão da rede.")
 		blockchain.Blocos = longestChain
-		SaveJSONBlockchain()
+		SaveJSONBlockchain() // Salva a versão correta
+	} else if !localChainIsValid && !networkChainIsValid {
+		fmt.Println("[Sync] ALERTA: A blockchain local está inválida e não foi possível encontrar uma cópia válida na rede.")
+	} else {
+		fmt.Println("[Sync] Blockchain local já está sincronizada e válida.")
 	}
 }
 
 // Verifica se toda a cadeia é válida de acordo com hash anterior
 func isChainValid(chain []Block) bool {
-	for i := 1; i < len(chain); i++ {
-		if !isBlockValid(chain[i], chain[i-1]) {
+	for i := 1; i < len(chain); i++ { // Começa do segundo bloco
+		if !isBlockValid(chain[i], chain[i-1]) { // Verifica se o bloco atual é válido em relação ao anterior
 			return false
 		}
 	}

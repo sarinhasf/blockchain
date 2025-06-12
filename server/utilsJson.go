@@ -77,21 +77,25 @@ func ReadBlocks() {
 CheckBlocks: verifica se a cadeia de blocos está ok antes do servidor rodar.
 */
 func CheckBlocks() bool {
-	check := true
 	blocos := blockchain.Blocos
-	if len(blocos) < 1 {
-		for n, b := range blocos {
-			if n == 0 {
-				continue
-			} else {
-				//se o hash do anterior for diferente do prevhash do atual
-				if b.PrevHash != blocos[n-1].Hash {
-					check = false //tem erro de concatenação das hash
-				}
-			}
+
+	// A verificação só é necessária se houver 2 ou mais blocos.
+	// Itera a partir do segundo bloco (índice 1).
+	for i := 1; i < len(blocos); i++ {
+		blocoAtual := blocos[i]
+		blocoAnterior := blocos[i-1]
+
+		// Se o hash do bloco anterior não corresponder ao PrevHash do bloco atual, a cadeia é inválida.
+		if blocoAtual.PrevHash != blocoAnterior.Hash {
+			fmt.Printf("Inconsistência encontrada entre o Bloco %d e o Bloco %d\n", i-1, i)
+			fmt.Printf("Hash do Bloco %d: %s\n", i-1, blocoAnterior.Hash)
+			fmt.Printf("PrevHash do Bloco %d: %s\n", i, blocoAtual.PrevHash)
+			return false // Encontrou um erro, a cadeia é inválida.
 		}
 	}
-	return check
+
+	// Se o laço terminar sem encontrar erros, a cadeia é válida.
+	return true
 }
 
 /*

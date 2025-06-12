@@ -25,23 +25,15 @@ A sincronização entre os nós é garantida por uma API REST e um mecanismo de 
         docker-compose create 
     3. Para verificar os containers criados, use o comando: 
         docker ps -a 
+    4. Para iniciar os servidores
+        docker-compose start server1 server2 server3
     Obs.: Para facilitar o processo, podem ser usados os scripts
-    4. Para rodar os clientes:
-        *client1*
-        docker-compose start client1
-        docker exec -it client1 sh
+    5. Para rodar o cliente:
+        docker-compose start client
+        docker exec -it client sh
         ./client
 
-        *client2*
-        docker-compose start client1
-        docker exec -it client1 sh
-        ./client
 
-        *client3*
-        docker-compose start client1
-        docker exec -it client1 sh
-        ./client
-    
 ## Equipe
 
 <table>
