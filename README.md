@@ -69,6 +69,7 @@ Em suma, este projeto validou a eficácia da blockchain e sistemas distribuídos
 
 ## Referências
 GOLANG. The Go Programming Language Documentation. Disponível em: https://golang.org/doc/.
+
 DOCKER INC. Docker Documentation. Disponível em: https://docs.docker.com/.
 
 
